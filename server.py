@@ -15,6 +15,8 @@ def addrToStr(addr):
 
 
 def threaded(client_socket, addr):
+    # TODO: 서버에서 보낸 문제와 클라이언트가 받은 문제가 다름
+
     TimePrint(f"Connected by {addrToStr(addr)}")
     problem = exam.problem()
     TimePrint(f'Send problem "{problem}" to {addrToStr(addr)}')
