@@ -2,11 +2,20 @@ import socket
 from _thread import *
 from exam import solve
 from log import TimePrint
+import sys
 
-
-HOST = "127.0.0.1"
+HOST = "192.168.0.34"
 PORT = 9999
 
+arg = sys.argv
+if len(arg) == 2:
+    HOST = arg[1]
+elif len(arg) == 3:
+    HOST = arg[1]
+    PORT = arg[2]
+
+
+TimePrint(f"Try connection to {HOST}:{PORT}")
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client_socket.connect((HOST, PORT))
 
@@ -21,7 +30,7 @@ def recv_data(client_socket):
 
 
 start_new_thread(recv_data, (client_socket,))
-TimePrint("Connected server")
+TimePrint(f"Connected server to {HOST}")
 
 while True:
     message = input()
