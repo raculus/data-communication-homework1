@@ -2,6 +2,7 @@ import socket
 from _thread import *
 import exam
 from log import TimePrint
+import time
 
 client_sockets = []
 
@@ -34,12 +35,17 @@ def threaded(client_socket, addr):
             TimePrint(f"{problem}={answer}")
             if answer == solved:
                 TimePrint(f"{answer} == {solved}")
+                problem = exam.problem()
+                client_socket.send(problem.encode("utf-8"))
             else:
                 TimePrint(f"{answer} != {solved}")
+                client_socket.send(problem.encode("utf-8"))
 
         except ConnectionResetError as e:
             TimePrint(f"Disconnected by {addrToStr(addr)}")
             break
+        print()
+        time.sleep(5)
 
     if client_socket in client_sockets:
         client_sockets.remove(client_socket)
