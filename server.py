@@ -3,22 +3,25 @@ from _thread import *
 import exam
 from log import TimePrint
 import time
+from clock import Clock
 
 client_sockets = []
 
 
-HOST = "127.0.0.1"
+HOST = socket.gethostbyname(socket.gethostname())
 PORT = 9999
 
+clock = Clock()
 
-def addrToStr(addr):
-    return f"{addr[0]}:{addr[1]}"
+
+def addrToStr(addr, client_socket):
+    return f"{addr[0]} (Client {client_sockets.index(client_socket)+1})"
 
 
 def threaded(client_socket, addr):
-    TimePrint(f"Connected by {addrToStr(addr)}")
+    TimePrint(f"Connected by {addrToStr(addr,client_socket)}", clock.get_clock())
     problem = exam.problem()
-    TimePrint(f'Send problem "{problem}" to {addrToStr(addr)}')
+    TimePrint(f'Send problem "{problem}" to {addrToStr(addr,client_socket)}')
     client_socket.send(problem.encode("utf-8"))
 
     while True:
@@ -26,9 +29,11 @@ def threaded(client_socket, addr):
             data = client_socket.recv(1024)
 
             if not data:
-                TimePrint(f"Disconnected by {addrToStr(addr)}")
+                TimePrint(f"Disconnected by {addrToStr(addr,client_socket)}")
                 break
-            TimePrint(f"Received from {addrToStr(addr)} >> {data.decode('utf-8')}")
+            TimePrint(
+                f"Received from {addrToStr(addr,client_socket)} >> {data.decode('utf-8')}"
+            )
 
             answer = exam.solve(problem)
             solved = data.decode("utf-8")
@@ -42,7 +47,7 @@ def threaded(client_socket, addr):
                 client_socket.send(problem.encode("utf-8"))
 
         except ConnectionResetError as e:
-            TimePrint(f"Disconnected by {addrToStr(addr)}")
+            TimePrint(f"Disconnected by {addrToStr(addr,client_socket)}")
             break
         print()
         time.sleep(5)
@@ -55,7 +60,7 @@ def threaded(client_socket, addr):
 
 
 def server():
-    TimePrint("Server start")
+    TimePrint(f"Server start at {HOST}")
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server_socket.bind((HOST, PORT))
@@ -76,4 +81,5 @@ def server():
         server_socket.close()
 
 
+clock.start_clock()
 server()
