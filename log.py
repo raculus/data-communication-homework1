@@ -1,12 +1,16 @@
-import time
+import datetime
 
 
-def TimePrint(msg):
+def TimePrint(msg, upTime=-1):
     """
-    출력 예시: [Sat Sep 23 17:50:36 2023]msg
+    출력 예시: [2023-09-26 22:26 001s]msg or [2023-09-26 22:26]msg
     """
-    now = time.ctime()
-    msg = f"[{now}]{msg}"
+    now = datetime.datetime.now()
+    now = now.strftime("%Y-%m-%d %H:%M")
+    if upTime > 0:
+        msg = f"[{now} {upTime:03d}s]{msg}"
+    else:
+        msg = f"[{now}]{msg}"
     print(msg)
 
 
