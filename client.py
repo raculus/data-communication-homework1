@@ -3,6 +3,9 @@ from _thread import *
 from exam import solve
 from log import TimePrint
 import sys
+from send import *
+import random
+import time
 
 HOST = "192.168.0.34"
 PORT = 9999
@@ -22,11 +25,16 @@ client_socket.connect((HOST, PORT))
 
 def recv_data(client_socket):
     while True:
-        data = client_socket.recv(1024).decode("utf-8")
-        TimePrint(f"Recived >> {data}")
-        solved = solve(data)
-        TimePrint(f"Solved >> {solved}")
-        client_socket.send(solved.encode("utf-8"))
+        try:
+            data = client_socket.recv(1024).decode("utf-8")
+            TimePrint(f"Recived >> {data}")
+            solved = solve(data)
+            delay = random.uniform(0.1, 5.0)
+            time.sleep(delay)
+            client_socket.send(solved.encode())
+            TimePrint(f"Solved >> {solved}")
+        except Exception as e:
+            exit()
 
 
 start_new_thread(recv_data, (client_socket,))
