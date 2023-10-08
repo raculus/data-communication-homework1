@@ -1,9 +1,8 @@
 import socket
 from _thread import *
 from exam import solve
-from log import TimePrint
+from log import *
 import sys
-from send import *
 import random
 import time
 
@@ -18,34 +17,53 @@ elif len(arg) == 3:
     PORT = arg[2]
 
 
-TimePrint(f"Try connection to {HOST}:{PORT}")
+printList = []
+
+p = TimePrint(f"Try connection to {HOST}:{PORT}")
+printList.append(p)
+
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client_socket.connect((HOST, PORT))
 
+p = TimePrint(f"Connected server to {HOST}")
+printList.append(p)
+name: str
+log: Log
+
 
 def recv_data(client_socket):
+    global log
     while True:
         try:
-            data = client_socket.recv(1024).decode("utf-8")
-            TimePrint(f"Recived >> {data}")
-            solved = solve(data)
-            delay = random.uniform(0.1, 5.0)
-            time.sleep(delay)
-            client_socket.send(solved.encode())
-            TimePrint(f"Solved >> {solved}")
+            data = client_socket.recv(1024).decode()
+            if not data:
+                break
+
+            if str(data).__contains__("Name:"):
+                p = TimePrint(f"Recived >> {data}")
+                printList.append(p)
+                name = data.split(": ")[1]
+                log = Log(name + ".txt")
+                for p in printList:
+                    log.write(p)
+                printList.clear()
+                print()
+                log.write()
+            else:
+                log.write(TimePrint(f"Recived >> {data}"))
+                solved = solve(data)
+                delay = random.randrange(1, 5)
+                time.sleep(delay)
+                client_socket.send(solved.encode())
+                log.write(TimePrint(f"Solved >> {solved}"))
+                print()
+                log.write()
         except Exception as e:
-            exit()
+            client_socket.close()
+            break
 
 
-start_new_thread(recv_data, (client_socket,))
-TimePrint(f"Connected server to {HOST}")
-
-while True:
-    message = input()
-    if message == "quit":
-        close_data = message
-        break
-
-    client_socket.send(message.encode("utf-8"))
-
-client_socket.close()
+recv_data(client_socket)
+log.write(TimePrint(f"Server stopped"))
+log.save()
+exit()

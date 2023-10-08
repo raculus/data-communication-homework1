@@ -3,7 +3,7 @@ import datetime
 
 def TimePrint(msg, upTime=-1):
     """
-    출력 예시: [2023-09-26 22:26 001s]msg or [2023-09-26 22:26]msg
+    출력 예시: [2023-09-26 22:26:12 001s]msg or [2023-09-26 22:26:12]msg
     """
     now = datetime.datetime.now()
     now = now.strftime("%Y-%m-%d %H:%M:%S")
