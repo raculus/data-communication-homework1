@@ -24,4 +24,4 @@ class Log:
         self.f.write("\n")
 
     def save(self):
-        self.f.close
+        self.f.close()
