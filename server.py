@@ -6,14 +6,13 @@ import time
 from clock import Clock
 import random
 from threading import Thread
-import sys
+import os
 
 client_sockets = []
 
 minuteLimit = 1
 secondlimit = minuteLimit * 60
 
-secondlimit = 10
 
 HOST = socket.gethostbyname(socket.gethostname())
 PORT = 9999
@@ -21,30 +20,33 @@ PORT = 9999
 clock = Clock()
 log = Log("Server.txt")
 
+result = 0
+
 
 def client_name(client_socket):
     return f"Client{client_sockets.index(client_socket)+1}"
 
 
-def addrToStr(addr):
-    return f"{addr[0]}"
-
-
 def threaded(client_socket, addr):
+    global result
+
     name = client_name(client_socket)
     log.write(
         TimePrint(
-            f"Connected by {addrToStr(addr)} ({name})",
-            clock.get_clock(),
+            f"Connected by {addr[0]} ({name})",
+            clock.get(),
         )
     )
     client_socket.send(f"Name: {name}".encode())
+    log.write(TimePrint(f"{addr[0]} name: {name}", clock.get()))
+    log.write()
+    print()
 
     problem = exam.problem()
     log.write(
         TimePrint(
-            f'Send problem "{problem}" to {addrToStr(addr)} ({name})',
-            clock.get_clock(),
+            f'Send problem "{problem}" to {addr[0]} ({name})',
+            clock.get(),
         )
     )
     client_socket.send(problem.encode("utf-8"))
@@ -56,96 +58,94 @@ def threaded(client_socket, addr):
             if not data:
                 log.write(
                     TimePrint(
-                        f"Disconnected by {addrToStr(addr)} ({name})",
-                        clock.get_clock(),
+                        f"Disconnected by {addr[0]} ({name})",
+                        clock.get(),
                     )
                 )
                 break
             log.write(
                 TimePrint(
-                    f"Received from {addrToStr(addr)} ({name}) >> {data.decode('utf-8')}",
-                    clock.get_clock(),
+                    f"Received from {addr[0]} ({name}) >> {data.decode('utf-8')}",
+                    clock.get(),
                 )
             )
 
             answer = exam.solve(problem)
             solved = data.decode("utf-8")
+            result += int(str(solved))
 
             if answer == solved:
                 log.write(
-                    TimePrint(f"Correct {addrToStr(addr)} ({name})", clock.get_clock())
+                    TimePrint(f"Correct {addr[0]} ({name})", clock.get())
                 )
                 problem = exam.problem()
             else:
                 log.write(
                     TimePrint(
-                        f"Incorrect {addrToStr(addr)} ({name})", clock.get_clock()
+                        f"Incorrect {addr[0]} ({name})", clock.get()
                     )
                 )
             log.write(
                 TimePrint(
-                    f'Send problem "{problem}" to {addrToStr(addr)} ({name})',
-                    clock.get_clock(),
+                    f'Send problem "{problem}" to {addr[0]} ({name})',
+                    clock.get(),
                 )
             )
-            delay = random.uniform(0.1, 5.0)
+            delay = random.randrange(1, 5)
             time.sleep(delay)
             client_socket.send(problem.encode())
-            print()
-            log.write()
 
         except ConnectionResetError as e:
             log.write(
                 TimePrint(
-                    f"Disconnected by {addrToStr(addr)} ({name})",
-                    clock.get_clock(),
+                    f"Disconnected by {addr[0]} ({name})",
+                    clock.get(),
                 )
             )
-            break
-        except Exception as e:
             client_socket.close()
-            pass
+            break
+        except ConnectionAbortedError as e:
+            break
 
 
 def server():
-    log.write(TimePrint(f"Server start at {HOST}", clock.get_clock()))
+    log.write(TimePrint(f"Server start at {HOST}", clock.get()))
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server_socket.bind((HOST, PORT))
     server_socket.listen()
-
+    log.write(TimePrint("Wait join client", clock.get()))
+    print()
+    log.write()
     try:
-        # TODO: 서버 안꺼짐
-        while clock.get_clock() <= secondlimit:
-            log.write(TimePrint("Wait join client", clock.get_clock()))
-
+        while True:
             client_socket, addr = server_socket.accept()
             client_sockets.append(client_socket)
             client_thread = Thread(target=threaded, args=(client_socket, addr))
             client_thread.daemon = True
             client_thread.start()
-            # start_new_thread(threaded, (client_socket, addr))
-        close()
 
     except Exception as e:
-        log.write(TimePrint(f"Error: {e}", clock.get_clock()))
+        log.write(TimePrint(f"Error: {e}", clock.get()))
 
 
 def close():
+    clock.stop()
     for client in client_sockets:
         client.close()
-    log.write(TimePrint("Server stopping...", clock.get_clock()))
+    log.write(TimePrint(f"Result: {result}", clock.get()))
+    log.write(TimePrint("Server stopping...", clock.get()))
     log.save()
-    sys.exit()
+    os._exit(0)
 
 
 def limit():
-    while clock.get_clock() <= secondlimit:
+    while clock.get() < secondlimit:
         time.sleep(0.001)
     close()
 
 
-clock.start_clock()
+clock.start()
 t = Thread(target=limit)
 t.daemon = True
 t.start()
