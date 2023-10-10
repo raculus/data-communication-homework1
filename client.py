@@ -7,7 +7,7 @@ import random
 import time
 
 HOST = "10.100.133.211"
-if(len(sys.argv) == 2):
+if len(sys.argv) == 2:
     HOST = sys.argv[1]
 PORT = 9999
 
@@ -53,7 +53,7 @@ def recv_data(client_socket):
                 print()
                 log.write()
             else:
-                log.write(TimePrint(f"Recived >> {data}"))
+                log.write(TimePrint(f"Received >> {data}"))
                 solved = solve(data)
                 delay = random.randrange(1, 5)
                 time.sleep(delay)
