@@ -6,7 +6,9 @@ import sys
 import random
 import time
 
-HOST = "192.168.0.34"
+HOST = "10.100.133.211"
+if(len(sys.argv) == 2):
+    HOST = sys.argv[1]
 PORT = 9999
 
 arg = sys.argv
@@ -26,6 +28,7 @@ client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client_socket.connect((HOST, PORT))
 
 p = TimePrint(f"Connected server to {HOST}")
+p = ""
 printList.append(p)
 name: str
 log: Log
