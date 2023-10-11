@@ -10,9 +10,8 @@ import os
 
 client_sockets = []
 
-minuteLimit = 1
-secondlimit = minuteLimit * 60
-
+MINUTE = 10
+SECOND = MINUTE * 60
 
 HOST = socket.gethostbyname(socket.gethostname())
 PORT = 9999
@@ -20,7 +19,7 @@ PORT = 9999
 clock = Clock()
 log = Log("Server.txt")
 
-result = 0
+sum_result = 0
 
 
 def client_name(client_socket):
@@ -28,7 +27,7 @@ def client_name(client_socket):
 
 
 def threaded(client_socket, addr):
-    global result
+    global sum_result
 
     name = client_name(client_socket)
     log.write(
@@ -72,28 +71,22 @@ def threaded(client_socket, addr):
 
             answer = exam.solve(problem)
             solved = data.decode("utf-8")
-            result += int(str(solved))
+            sum_result += int(str(solved))
 
             if answer == solved:
-                log.write(
-                    TimePrint(f"Correct {addr[0]} ({name})", clock.get())
-                )
+                log.write(TimePrint(f"Correct {addr[0]} ({name})", clock.get()))
                 problem = exam.problem()
             else:
-                log.write(
-                    TimePrint(
-                        f"Incorrect {addr[0]} ({name})", clock.get()
-                    )
-                )
+                log.write(TimePrint(f"Incorrect {addr[0]} ({name})", clock.get()))
+            delay = random.randrange(1, 5)
+            time.sleep(delay)
+            client_socket.send(problem.encode())
             log.write(
                 TimePrint(
                     f'Send problem "{problem}" to {addr[0]} ({name})',
                     clock.get(),
                 )
             )
-            delay = random.randrange(1, 5)
-            time.sleep(delay)
-            client_socket.send(problem.encode())
 
         except ConnectionResetError as e:
             log.write(
@@ -109,7 +102,7 @@ def threaded(client_socket, addr):
 
 
 def server():
-    log.write(TimePrint(f"Server start at {HOST}", clock.get()))
+    log.write(TimePrint(f"Server start at {HOST}:{PORT}", clock.get()))
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server_socket.bind((HOST, PORT))
@@ -133,14 +126,14 @@ def close():
     clock.stop()
     for client in client_sockets:
         client.close()
-    log.write(TimePrint(f"Result: {result}", clock.get()))
+    log.write(TimePrint(f"Result: {sum_result}", clock.get()))
     log.write(TimePrint("Server stopping...", clock.get()))
     log.save()
     os._exit(0)
 
 
 def limit():
-    while clock.get() < secondlimit:
+    while clock.get() < SECOND:
         time.sleep(0.001)
     close()
 

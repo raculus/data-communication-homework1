@@ -6,7 +6,7 @@ import sys
 import random
 import time
 
-HOST = "10.100.133.211"
+HOST = "127.0.0.1"
 if len(sys.argv) == 2:
     HOST = sys.argv[1]
 PORT = 9999
@@ -30,6 +30,7 @@ client_socket.connect((HOST, PORT))
 p = TimePrint(f"Connected server to {HOST}")
 p = ""
 printList.append(p)
+
 name: str
 log: Log
 
@@ -43,7 +44,7 @@ def recv_data(client_socket):
                 break
 
             if str(data).__contains__("Name:"):
-                p = TimePrint(f"Recived >> {data}")
+                p = TimePrint(f"Received >> {data}")
                 printList.append(p)
                 name = data.split(": ")[1]
                 log = Log(name + ".txt")
